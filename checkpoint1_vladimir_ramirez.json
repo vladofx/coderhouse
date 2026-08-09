@@ -1,0 +1,221 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        32,
+        32
+      ],
+      "id": "c2d6beb5-c3f7-4c3d-85bd-8c33300c083d",
+      "name": "When chat message received",
+      "webhookId": "6495cc4c-b70c-484d-b954-e300aba067ed"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "Corporate Role: Customer Experience Analyst\nBusiness Objectives:\n1. Verify that every required field in the incoming purchase record is present and correctly formatted.\n2. Append a Session Metadata section that records the analyst role, the session’s objectives, and the action constraints.\n3. Scan all free‑text values (product names, notes, addresses, etc.) and ensure they contain no exclusive or biased language; if any is found, mark the record as Invalid and provide a clear reason.\n\nExplicit Action Constraints:\n1. Do not modify original purchase fields\n2. Do not add/remove items\n3. Append only under this header\n4. Reject if exclusive language is present\n5. Exclude Exclusive Language: TRUE\n\nValidation result:\nRecord Status: VALID | INVALID\nIf INVALID → Reason: [DESCRIPTION]"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        368,
+        -16
+      ],
+      "id": "89f8029d-051a-4277-9dea-7b57dbaffa58",
+      "name": "AI Agent",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-20b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        288,
+        240
+      ],
+      "id": "0121be15-1413-4249-85ab-6444584b251d",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "PSS1rWflsVm4Dg9n",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1WJx0hhCHWMeyHP7QsaHBonOqIiaY7V5A3TtE3FweDnA",
+          "mode": "list",
+          "cachedResultName": "Purchases",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1WJx0hhCHWMeyHP7QsaHBonOqIiaY7V5A3TtE3FweDnA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1WJx0hhCHWMeyHP7QsaHBonOqIiaY7V5A3TtE3FweDnA/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "customer_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('customer_id__using_to_match_', ``, 'string') }}",
+            "purchase_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('purchase_id', ``, 'string') }}",
+            "purchase_date": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('purchase_date', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "customer_id"
+          ],
+          "schema": [
+            {
+              "id": "purchase_id",
+              "displayName": "purchase_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "purchase_date",
+              "displayName": "purchase_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "customer_id",
+              "displayName": "customer_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        576,
+        240
+      ],
+      "id": "775fd3a4-d9f0-4aa6-949f-50557e97196f",
+      "name": "Append or update row in sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "jN3z2uyyB4AD8M1s",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "robot@test.com",
+        "toEmail": "vladofx@gmail.com",
+        "subject": "Test execution",
+        "html": "=ID: {{ $execution.id }}\nMode: {{ $execution.mode }}\nDate: {{ $now }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        736,
+        -16
+      ],
+      "id": "e202ad3d-f2b5-499b-8fd1-276270fa3240",
+      "name": "Send an Email",
+      "webhookId": "f5b6023a-a9ed-469d-8624-e13f1c95c508",
+      "credentials": {
+        "smtp": {
+          "id": "cZWoghmpcm0HRwuH",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send an Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "cf68cd7c-2c58-4930-84a3-298f52520b76",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e25d989d7ee6d50c912e923cba05ed768f23646f961aa916161a8a334f496d20"
+  },
+  "nodeGroups": [],
+  "id": "sLSNSNKn24nXwpvv",
+  "tags": []
+}
