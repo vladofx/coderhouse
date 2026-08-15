@@ -1,0 +1,174 @@
+{
+  "name": "worker2_modulo2_ramirez_vladimir.json",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "jsonExample",
+        "jsonExample": "  {\n    \"CustomerID\": \"CUST-98327111\",\n    \"PurchaseID\": \"PUR-20230814-00123\",\n    \"Error\": \"no matching customer record found. [line 5]\"\n  }"
+      },
+      "id": "2a58f990-09d2-468c-be42-745a17922cac",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1104,
+        -16
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appgnQThIihZhHJMo",
+          "mode": "list",
+          "cachedResultName": "Coderhouse Base",
+          "cachedResultUrl": "https://airtable.com/appgnQThIihZhHJMo"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblg5krz1OHPdFPd2",
+          "mode": "list",
+          "cachedResultName": "Purchase Errors",
+          "cachedResultUrl": "https://airtable.com/appgnQThIihZhHJMo/tblg5krz1OHPdFPd2"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "CustomerID": "={{ $json.CustomerID }}",
+            "PurchaseID": "={{ $json.PurchaseID }}",
+            "Error": "={{ $json.Error }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ErrorID",
+              "displayName": "ErrorID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "CustomerID",
+              "displayName": "CustomerID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "PurchaseID",
+              "displayName": "PurchaseID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Error",
+              "displayName": "Error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        -880,
+        -16
+      ],
+      "id": "d4ad61c3-fa5f-42ea-a19d-e56b79bfee25",
+      "name": "Create a record",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "93Ucsuftt5GwteHD",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Parse the received message from either the success or failure branch\nlet payload = $json;\n\n// If the message arrived as a JSON string, parse it into an object\nif (typeof payload === 'string') {\n  try {\n    payload = JSON.parse(payload);\n  } catch (e) {\n    payload = { message: payload };\n  }\n}\n\nconst success = payload.success === true;\n\nreturn {\n  success: false,\n  message: $json.fields.Error,\n  purchase_id: $json.fields.PurchaseID,\n  data: payload,\n};"
+      },
+      "id": "4adb501f-e479-43fa-b5d5-5ffddb15dae4",
+      "name": "Parse Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -656,
+        -16
+      ]
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "CustomerID": "CUST-98327111",
+          "PurchaseID": "PUR-20230814-00123",
+          "Error": "no matching customer record found. [line 5]"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Create a record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a record": {
+      "main": [
+        [
+          {
+            "node": "Parse Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "c3f29543-8efc-4ce5-92ec-fa0612dbaabe",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e25d989d7ee6d50c912e923cba05ed768f23646f961aa916161a8a334f496d20"
+  },
+  "nodeGroups": [],
+  "id": "NAB3GUVhH1aYccso",
+  "tags": []
+}

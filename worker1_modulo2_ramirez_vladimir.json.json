@@ -1,0 +1,209 @@
+{
+  "name": "worker1_modulo2_ramirez_vladimir.json",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "jsonExample",
+        "jsonExample": "{\n  \"customer_id\": \"CUST-983274\",\n  \"purchase_id\": \"PUR-20230814-00123\",\n  \"purchase_date\": \"2026-08-14T15:32:00Z\",\n  \"status\": \"completed\",\n  \"currency\": \"USD\",\n  \"total_amount\": 149.97,\n  \"tax_amount\": 12.00,\n  \"shipping_amount\": 5.99,\n  \"grand_total\": 167.96,\n  \"payment_method\": {\n    \"type\": \"credit_card\",\n    \"provider\": \"Visa\",\n    \"last4\": \"4242\",\n    \"transaction_id\": \"TXN-7f4c9e1a\"\n  },\n  \"items\": [\n    {\n      \"sku\": \"PROD-001\",\n      \"name\": \"Wireless Mouse\",\n      \"quantity\": 1,\n      \"unit_price\": 29.99,\n      \"total_price\": 29.99\n    },\n    {\n      \"sku\": \"PROD-014\",\n      \"name\": \"Mechanical Keyboard\",\n      \"quantity\": 1,\n      \"unit_price\": 119.99,\n      \"total_price\": 119.99\n    }\n  ],\n  \"shipping_address\": {\n    \"first_name\": \"Emily\",\n    \"last_name\": \"Rogers\",\n    \"line1\": \"742 Evergreen Terrace\",\n    \"line2\": \"\",\n    \"city\": \"Springfield\",\n    \"state\": \"IL\",\n    \"postal_code\": \"62704\",\n    \"country\": \"US\",\n    \"phone\": \"+1-555-0198\"\n  },\n  \"billing_address\": {\n    \"first_name\": \"Emily\",\n    \"last_name\": \"Rogers\",\n    \"line1\": \"742 Evergreen Terrace\",\n    \"line2\": \"\",\n    \"city\": \"Springfield\",\n    \"state\": \"IL\",\n    \"postal_code\": \"62704\",\n    \"country\": \"US\",\n    \"phone\": \"+1-555-0198\"\n  },\n  \"notes\": \"Leave package at side door if nobody answers.\",\n  \"created_at\": \"2026-08-14T15:32:05Z\",\n  \"updated_at\": \"2026-08-14T15:45:12Z\"\n}"
+      },
+      "id": "2c3f753a-def3-4939-b86e-c05c0fac49c0",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1104,
+        -16
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1WJx0hhCHWMeyHP7QsaHBonOqIiaY7V5A3TtE3FweDnA",
+          "mode": "list",
+          "cachedResultName": "Purchases",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1WJx0hhCHWMeyHP7QsaHBonOqIiaY7V5A3TtE3FweDnA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1WJx0hhCHWMeyHP7QsaHBonOqIiaY7V5A3TtE3FweDnA/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "purchase_id": "={{ $json.purchase_id }}",
+            "purchase_date": "={{ $json.purchase_date }}",
+            "customer_id": "={{ $json.customer_id }}"
+          },
+          "matchingColumns": [
+            "purchase_id"
+          ],
+          "schema": [
+            {
+              "id": "purchase_id",
+              "displayName": "purchase_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "purchase_date",
+              "displayName": "purchase_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer_id",
+              "displayName": "customer_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "3fb8df39-23f4-41fa-8535-63fbf663b832",
+      "name": "Append or update row in sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -880,
+        -16
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "jN3z2uyyB4AD8M1s",
+          "name": "Google Sheets account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ { \"success\": false, \"message\": ($json.error && $json.error.message) ? $json.error.message : \"Failed to append/update row\" } }}",
+        "options": {}
+      },
+      "id": "c7eb8063-3b72-4895-9b0a-08011a76abaa",
+      "name": "Return Failure",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -672,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Parse the received message from either the success or failure branch\nlet payload = $json;\n\n// If the message arrived as a JSON string, parse it into an object\nif (typeof payload === 'string') {\n  try {\n    payload = JSON.parse(payload);\n  } catch (e) {\n    payload = { message: payload };\n  }\n}\n\nconst success = payload.success === true;\n\nreturn {\n  success,\n  message: payload.message || (success ? 'Operation succeeded' : 'Operation failed'),\n  purchase_id: payload.purchase_id || null,\n  data: payload,\n};"
+      },
+      "id": "a723a83e-7e80-479d-a1b8-a79dd5ef5f03",
+      "name": "Parse Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -432,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ { \"success\": true, \"purchase_id\": $json.purchase_id, \"message\": \"Row appended/updated successfully\" } }}",
+        "options": {}
+      },
+      "id": "7a8ec666-9fd6-4a65-950a-7085189a1fda",
+      "name": "Return Success",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -672,
+        -112
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Return Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Return Failure": {
+      "main": [
+        [
+          {
+            "node": "Parse Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Return Success": {
+      "main": [
+        [
+          {
+            "node": "Parse Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "18b7a4ce-a4d7-4254-a4e1-ddc2e45b2574",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e25d989d7ee6d50c912e923cba05ed768f23646f961aa916161a8a334f496d20"
+  },
+  "nodeGroups": [],
+  "id": "GlySV2OBs6a69xXs",
+  "tags": []
+}
