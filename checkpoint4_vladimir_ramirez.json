@@ -1,0 +1,753 @@
+{
+  "name": "checkpoint4_vladimir_ramirez",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "maxResults": 1,
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -1360,
+        -432
+      ],
+      "id": "36431f0c-2877-429a-bec1-5295fc4de868",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "9tOwgiARn58RsLlD",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "qwen/qwen3.8-27b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -960,
+        -240
+      ],
+      "id": "fea99125-5994-4c50-b958-6f621e03281c",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "POz9d1iKIpsON5G7",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5226bf33-0f42-4615-86cc-ece14ef0e659",
+              "name": "Subject",
+              "value": "={{ $json.Subject }}",
+              "type": "string"
+            },
+            {
+              "id": "bb2682af-fc55-4a05-8fd5-c5036b3b3985",
+              "name": "From",
+              "value": "={{ $json.From.extractEmail() }}",
+              "type": "string"
+            },
+            {
+              "id": "9b0a38e9-8ee6-4c10-bc6c-6e515d146609",
+              "name": "Body",
+              "value": "={{ $json.snippet }}",
+              "type": "string"
+            },
+            {
+              "id": "b4455025-71cc-4fee-96db-1b9c9192a438",
+              "name": "Name",
+              "value": "={{ $json.From.removeTags()  }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -1152,
+        -432
+      ],
+      "id": "67e8d815-81f2-42bc-9a3d-dba22ff43bc2",
+      "name": "Get email data"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5a4293ea-c6d4-4756-9718-7fd881248227",
+              "name": "isAutoReply",
+              "value": "={{ $json.output.parseJson().isAutoReply }}",
+              "type": "boolean"
+            },
+            {
+              "id": "ab546f8d-54d0-453a-93d7-5a25b0cebb9f",
+              "name": "reason",
+              "value": "={{ $json.output.parseJson().reason }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -640,
+        -432
+      ],
+      "id": "e696f77d-8bf4-49d4-a9dd-3cd527993957",
+      "name": "Get response"
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appgnQThIihZhHJMo",
+          "mode": "list",
+          "cachedResultName": "Coderhouse Base",
+          "cachedResultUrl": "https://airtable.com/appgnQThIihZhHJMo"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblFBs175Q6KTXUyx",
+          "mode": "list",
+          "cachedResultName": "Contacto",
+          "cachedResultUrl": "https://airtable.com/appgnQThIihZhHJMo/tblFBs175Q6KTXUyx"
+        },
+        "filterByFormula": "={{ \"{correo} = '\" + $('Get email data').item.json.From + \"'\" }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        -208,
+        -576
+      ],
+      "id": "558baa1e-a7fd-49e1-a498-636cdafd504e",
+      "name": "Lookup",
+      "alwaysOutputData": true,
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "8105svKELtK43Kjo",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all().filter(i => i.json && Object.keys(i.json).length > 0);\nlet error = '';\nlet first = {};\n\nif (items.length === 0) {\n  error = \"Customer not found\";\n} else {\n  first = items[0].json;\n}\n\nif (error === \"\"  && !first.id) { \n    error = \"Airtable validation failed: record is missing an id.\";\n   \n}\n\nif (error === \"\" && (!first.fields || typeof first.fields !== \"object\")) {\n    error = \"Airtable validation failed: record has no fields.\";  \n}\n\nif (error === \"\") {\n  return { json: { found: true, customer: first }} \n}\n\nreturn { json: { found: false, error: error }}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        -576
+      ],
+      "id": "2021b241-87be-4c42-8a79-ac598ca8a86e",
+      "name": "Validate  lookup"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appgnQThIihZhHJMo",
+          "mode": "list",
+          "cachedResultName": "Coderhouse Base",
+          "cachedResultUrl": "https://airtable.com/appgnQThIihZhHJMo"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblFBs175Q6KTXUyx",
+          "mode": "list",
+          "cachedResultName": "Contacto",
+          "cachedResultUrl": "https://airtable.com/appgnQThIihZhHJMo/tblFBs175Q6KTXUyx"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "correo": "={{ $('Get email data').item.json.From }}",
+            "nombre": "={{ $('Get email data').item.json.Name }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "correo",
+              "displayName": "correo",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "nombre",
+              "displayName": "nombre",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        400,
+        -688
+      ],
+      "id": "74ecbf85-d427-46e1-9081-594c4a4f17fe",
+      "name": "Create customer",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "8105svKELtK43Kjo",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Subject: {{ $json.Subject }}\nFrom: {{ $json.From }}\nBody: {{ $json.Body }}",
+        "options": {
+          "systemMessage": "You are an Email Governance Engine.\n\nYour single responsibility is to determine whether an incoming email is an automated response. Read this  info from the User Message\n\nAnalyze the email subject, sender address, headers, and body.\n\nClassify the email as an AutoReply if any of the following indicators are present:\n\nSubject indicators:\n- Auto-reply\n- Automatic Reply\n- Out of Office\n- Out of the Office\n- Away from Office\n- Vacation Response\n- Automatic Response\n- Undeliverable\n- Delivery Failure\n- Mail Delivery Subsystem\n- Delivery Status Notification\n- Returned Mail\n- Failed Delivery\n\nSender indicators:\n- no-reply@\n- noreply@\n- do-not-reply@\n- donotreply@\n- mailer-daemon@\n- postmaster@\n\nHeader indicators:\n- Auto-Submitted\n- X-Auto-Response-Suppress\n- Precedence: bulk\n- Auto-Generated\n- Delivery Failure\n- Bounce Notification\n\nBody indicators:\n- This is an automated message\n- I am currently out of the office\n- Thank you for your email. I am away\n- Your message could not be delivered\n- Do not reply to this email\n- This mailbox is unattended\n\nDecision Rules:\n- If there is sufficient evidence that the email was generated automatically, classify it as AutoReply.\n- Otherwise classify it as NotAutoReply.\n- Be conservative and prioritize preventing email loops.\n- Do not classify human-written emails as AutoReply unless clear automated indicators exist.\n\nReturn ONLY a valid JSON  like this: \n{\n  \"isAutoReply\": true,\n  \"classification\": \"AutoReply\",\n  \"confidence\": 0.98,\n  \"reason\": \"Subject contains 'Out of Office' and body indicates an automatic response.\"\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -960,
+        -432
+      ],
+      "id": "092abaa7-a8b0-41ca-8f09-150adc1e1cbb",
+      "name": "Validate email"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "3201a97c-19ac-4299-b52e-a5913af3f3b7",
+              "leftValue": "={{ $json.isAutoReply }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -448,
+        -432
+      ],
+      "id": "9d405d51-cb08-4544-95e4-ad36f2b319d1",
+      "name": "Is autoreply?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8d025597-b31c-4330-a44e-aed02d539f2e",
+              "leftValue": "={{ $json.found }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        176,
+        -576
+      ],
+      "id": "a36fb311-c9af-4fd2-a1ba-e54ebea0cfe3",
+      "name": "Create or update"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appgnQThIihZhHJMo",
+          "mode": "list",
+          "cachedResultName": "Coderhouse Base",
+          "cachedResultUrl": "https://airtable.com/appgnQThIihZhHJMo"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblFBs175Q6KTXUyx",
+          "mode": "list",
+          "cachedResultName": "Contacto",
+          "cachedResultUrl": "https://airtable.com/appgnQThIihZhHJMo/tblFBs175Q6KTXUyx"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "correo": "={{ $('Get email data').item.json.From }}",
+            "nombre": "={{ $('Get email data').item.json.Name }}"
+          },
+          "matchingColumns": [
+            "correo"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "correo",
+              "displayName": "correo",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "nombre",
+              "displayName": "nombre",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        400,
+        -448
+      ],
+      "id": "c38f3db9-b874-4f06-bf1c-645ab745d148",
+      "name": "Update record",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "8105svKELtK43Kjo",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-safeguard-20b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1072,
+        1056
+      ],
+      "id": "f5e80220-1df3-4f48-b586-9afb03f399cf",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "POz9d1iKIpsON5G7",
+          "name": "Groq account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "sendTo": "vramirez@oneinc.com",
+        "subject": "🚨 Solicitud para aprobar draft",
+        "message": "=<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto\">\n  <div style=\"background: #7a1004; padding: 16px; border-radius: 8px 8px 0 0\">\n    <h2 style=\"color: white; margin: 0\">🚨 Solicitud para almacenar draft</h2>\n  </div>\n  <div\n    style=\"\n      background: #f9f9f9;\n      padding: 24px;\n      border: 1px solid #ddd;\n      border-top: none;\n      border-radius: 0 0 8px 8px;\n    \"\n  >\n    <p>\n      <strong>Correo:</strong><br />{{ $('Get email data').item.json.From }}\n    </p>\n    <p>\n      <strong>Titulo:</strong>\n      <span>{{ $('Get email data').item.json.Subject }}</span>\n    </p>\n    <p>\n      <strong>Mensaje:</strong>\n      <span>{{ $('Get email data').item.json.Body }}</span>\n    </p>\n    <p>Almacenar draft?</p>\n    <a\n      href=\"{{ $execution.resumeUrl + '&decision=yes' }}\"\n      style=\"\n        display: inline-block;\n        background: #27ae60;\n        color: white;\n        padding: 14px 28px;\n        text-decoration: none;\n        border-radius: 6px;\n        font-weight: bold;\n        margin-right: 12px;\n      \"\n      >✅ Si</a\n    ><a\n      href=\"{{ $execution.resumeUrl + '&decision=no' }}\"\n      style=\"\n        display: inline-block;\n        background: #e74c3c;\n        color: white;\n        padding: 14px 28px;\n        text-decoration: none;\n        border-radius: 6px;\n        font-weight: bold;\n      \"\n      >❌ No</a\n    >\n    <p style=\"margin: 24px 0 0; color: #888; font-size: 12px\">\n      ⚠️ Este enlace es de un solo uso.\n    </p>\n  </div>\n</div>\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        640,
+        -576
+      ],
+      "id": "a8a39cf3-7072-4c0c-8bc6-70c0c83bc7c7",
+      "name": "Send confirmation  email",
+      "webhookId": "cda466f3-9152-4e9e-8bf6-bb0d337e861b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "9tOwgiARn58RsLlD",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "47efac6e-445f-4f2e-9b6a-b7ffd06b6f83",
+              "leftValue": "={{ $json.query.decision }}",
+              "rightValue": "yes",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1040,
+        -576
+      ],
+      "id": "b8cfb0cc-2abf-4615-b4d6-025f5922bdb2",
+      "name": "Save draft?"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1kz10cAFHEqD0CZsCTUHbcaP3fRBngaqkeKFZj7P8Bj0",
+          "mode": "list",
+          "cachedResultName": "EmailDrafts",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1kz10cAFHEqD0CZsCTUHbcaP3fRBngaqkeKFZj7P8Bj0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1kz10cAFHEqD0CZsCTUHbcaP3fRBngaqkeKFZj7P8Bj0/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "From": "={{ $('Get email data').item.json.From }}",
+            "Subject": "={{ $('Get email data').item.json.Subject }}",
+            "Message": "={{ $('Get email data').item.json.Body }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "From",
+              "displayName": "From",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Subject",
+              "displayName": "Subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Message",
+              "displayName": "Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1312,
+        -688
+      ],
+      "id": "43645ddd-b072-42da-887c-88125aaa1375",
+      "name": "Save draft",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "wHeDZbBveHHJFbtO",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        848,
+        -576
+      ],
+      "id": "e42b61de-3bab-4eea-ac1d-96b13775903e",
+      "name": "Wait for confirmation",
+      "webhookId": "7b49557e-a3a2-4065-81bf-b7ce80c5b604"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Validate email",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get email data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get email data": {
+      "main": [
+        [
+          {
+            "node": "Validate email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get response": {
+      "main": [
+        [
+          {
+            "node": "Is autoreply?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup": {
+      "main": [
+        [
+          {
+            "node": "Validate  lookup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate  lookup": {
+      "main": [
+        [
+          {
+            "node": "Create or update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create customer": {
+      "main": [
+        [
+          {
+            "node": "Send confirmation  email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate email": {
+      "main": [
+        [
+          {
+            "node": "Get response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is autoreply?": {
+      "main": [
+        [
+          {
+            "node": "Lookup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create or update": {
+      "main": [
+        [
+          {
+            "node": "Create customer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Update record": {
+      "main": [
+        [
+          {
+            "node": "Send confirmation  email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send confirmation  email": {
+      "main": [
+        [
+          {
+            "node": "Wait for confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save draft?": {
+      "main": [
+        [
+          {
+            "node": "Save draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for confirmation": {
+      "main": [
+        [
+          {
+            "node": "Save draft?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "b3a15aee-a670-4680-965c-3fa2f29e944b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9fdaedaa9bb6b3881f690c636bd81c6d655d947f962494ad42a48fd4ed610639"
+  },
+  "nodeGroups": [],
+  "id": "yFRqGeF02aVPhvqY",
+  "tags": []
+}
